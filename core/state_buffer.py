@@ -1,0 +1,2 @@
+# thread-safe, temporary holding area for the validated game deltas before orchestrator passes them to the miner
+# asyncio.Lock() to ensure that the WebSocket listener doesn't write to the list at the exact millisecond the Orchestrator is trying to empty it.
