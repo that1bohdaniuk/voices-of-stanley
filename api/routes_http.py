@@ -1,16 +1,8 @@
 # debug dashboard
 # has simple GET methods that enable the browser monitoring of stanley metrics
-import uuid
-from datetime import datetime
-from typing import Optional, Dict, Any
-
 from fastapi import APIRouter
-
-from api.schemas import GameEvent
+from api.schemas import GameEventModel
 from core import state_buffer
-
-# import internal state variables here later
-# from core.orchestrator import tension_sum, idle_counter
 
 http_router = APIRouter()
 
@@ -28,7 +20,7 @@ async def get_state():
     }
 
 @http_router.post("/ping")
-async def ping(game_event: GameEvent):
+async def ping(game_event: GameEventModel):
     print(f"Event Ping received. {game_event.id}.\nLabel is {game_event.label}")
     await state_buffer.append(game_event)
 

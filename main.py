@@ -4,9 +4,9 @@ import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-import chromadb
 
 from core import orchestrator
+from memory.archive import initialize_chroma_client
 from api.routes_ws import ws_router
 from api.routes_http import http_router
 import config
@@ -18,10 +18,9 @@ async def lifespan(app: FastAPI):
     # TODO: connect to chromaDB instance
     print("[FastAPI] Starting lifespan.")
     print("[ChromaDB] Initializing client...")
-    chroma_client = chromadb.PersistentClient(path="./data/")
-    print("[CLOCK] Starting orchestrator clock.")
+    app.state.chroma_client = await initialize_chroma_client()
+    print("[CLOCK] Starting orchestrator clock...")
     clock_task =  asyncio.create_task(orchestrator.run_clock(interval=config.CLOCK_INTERVAL))
-    #app.state.vector_db = init_chroma_client()
 
     yield
 
@@ -30,7 +29,6 @@ async def lifespan(app: FastAPI):
     print("[FastAPI] Ending lifespan.")
     print("[CLOCK] Stopping orchestrator clock.")
     clock_task.cancel()
-    # app.state.vector_db.close()
 
 app = FastAPI(lifespan=lifespan)
 
