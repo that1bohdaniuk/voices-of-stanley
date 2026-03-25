@@ -10,5 +10,5 @@ class GameEventModel(BaseModel):
     label: str
     timestamp: datetime
     location: Optional[str] = "Not assigned."
-    importance: Optional[int] = 1
+    importance: Optional[float] = 1
     details: Optional[Dict[str, Any]] = None

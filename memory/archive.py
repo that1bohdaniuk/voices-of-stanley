@@ -5,7 +5,7 @@ import time
 import uuid
 import chromadb
 import numpy as np
-from typing import List, cast
+from typing import List, cast, Dict
 from chromadb import QueryResult
 import config
 from api.schemas import GameEventModel
@@ -103,6 +103,69 @@ async def retrieve(_event: GameEventModel, filter_dict: dict = None):
         include=include_params,
         where=filter_dict)
     return await twrag(_chroma_results=results, broadness=5)
-
 # usage example: retrieve(event, filter_dict={"event_type": "signal_detected"})
+
+
+async def purge_events():
+    global _collection
+
+    where_params = cast(chromadb.Where, {"importance": {"$lte": config.EVENT_PURGE_IMPORTANCE_THRESHOLD}})
+    include_params = cast(chromadb.Include, ["metadatas"])
+
+    result = await asyncio.to_thread(
+        _collection.get,
+        include=include_params,
+        where = where_params
+    )
+
+    _ids = result["ids"]
+    _metadatas = result["metadatas"]
+
+    if not _ids:
+        return
+
+    _ids_to_delete = []
+    _current_timestamp = time.time()
+
+
+    _delta_minutes: List[float] = []
+    for i in range(len(_ids)):
+        _doc_timestamp = _metadatas[i].get('timestamp', 0)
+        _delta_seconds = _current_timestamp - _doc_timestamp
+        _delta_minutes = _delta_seconds / 60
+
+        if _delta_minutes > config.EVENT_PURGE_TIME:
+            _ids_to_delete.append(_ids[i])
+
+    if not _ids_to_delete:
+        return
+
+    await asyncio.to_thread(
+        _collection.delete,
+        ids=_ids_to_delete,
+    )
+
+# function that returns all recent non-pruned events
+async def get_all_to_prune_events():
+    global _collection
+    cutoff_timestamp = time.time() - (5 * 24 * 60 * 60)
+
+    where_params = cast(
+        chromadb.api.types.Where,
+        {"timestamp": {"$lt": cutoff_timestamp}}
+    )
+    include_params = cast(
+        chromadb.api.types.Include,
+        ["metadatas"]
+    )
+
+    result = await asyncio.to_thread(
+        _collection.get,
+        where=where_params,
+        include=include_params
+    )
+
+    return result["ids"]
+
+
 
