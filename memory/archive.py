@@ -1,15 +1,12 @@
 # wraps the chromadb client
 # handles the embedding of miner's chunks and executes time-decay and importance cosine similarity formula during retrieval
 import asyncio
-import time
-import uuid
 import chromadb
 import numpy as np
-from typing import List, cast, Dict
+from typing import List, cast
 from chromadb import QueryResult
 import config
 from api.schemas import GameEventModel
-
 
 _collection: chromadb.Collection
 
@@ -20,7 +17,7 @@ async def initialize_chroma_client() -> chromadb.ClientAPI:
     _collection = _client.get_or_create_collection(
         name="events-collection",
         # explicitly define hsnw vector space as cosine
-        metadata={"hsnw:space": "cosine"})
+        metadata={"hnsw:space": "cosine"})
 
     return _client
 
@@ -28,12 +25,16 @@ async def initialize_chroma_client() -> chromadb.ClientAPI:
 async def embed(_event: GameEventModel):
     print(f"Embedding '{_event.label}'...")
     _metadatas = {
-        'timestamp': _event.timestamp.timestamp(),
+        'timestamp': _event.timestamp,
         'importance': _event.importance,
-        **{str(k): v for k, v in _event.details.items()}
+        **{str(k): v for k, v in (_event.details or {}).items()}
     }
+
+    if _event.location:
+        _metadatas['location'] = _event.location
+
     await asyncio.to_thread(_collection.add,
-        ids=[str(uuid.uuid4())],
+        ids=[str(_event.id)],
         documents=[_event.label],
         metadatas=[_metadatas])
 
@@ -41,12 +42,22 @@ async def embed(_event: GameEventModel):
 async def embed_bunch(_events: List[GameEventModel]):
     global _collection
 
-    _ids = [str(uuid.uuid4()) for _ in _events]
+    if not _events:
+        return
+
+    _ids = [str(e.id) for e in _events]
     _documents = [e.label for e in _events]
-    _metadatas = [{'timestamp': e.timestamp.timestamp(),
-                   'importance': e.importance,
-                   **{str(k): v for k, v in e.details.items()}
-                   } for e in _events]
+
+    _metadatas = []
+    for e in _events:
+        meta = {
+            'timestamp': e.timestamp,
+            'importance': e.importance,
+            **{str(k): v for k, v in (e.details or {}).items()}
+        }
+        if e.location:
+            meta['location'] = e.location
+        _metadatas.append(meta)
 
     await asyncio.to_thread(
         _collection.add,
@@ -62,7 +73,7 @@ async def twrag(_chroma_results: QueryResult, broadness: int):
         return []
     _decay_rate = config.TWRAG_DECAY_RATE
     _twrag_results = []
-    _current_time = time.time()
+    _current_time = config.CURRENT_TIME
 
     _ids = _chroma_results["ids"][0]
     _metadatas = _chroma_results["metadatas"][0]
@@ -124,10 +135,9 @@ async def purge_events():
         return
 
     _ids_to_delete = []
-    _current_timestamp = time.time()
+    _current_timestamp = config.CURRENT_TIME
 
 
-    _delta_minutes: List[float] = []
     for i in range(len(_ids)):
         _doc_timestamp = _metadatas[i].get('timestamp', 0)
         _delta_seconds = _current_timestamp - _doc_timestamp
@@ -147,7 +157,7 @@ async def purge_events():
 # function that returns all recent non-pruned events
 async def get_all_to_prune_events():
     global _collection
-    cutoff_timestamp = time.time() - (5 * 24 * 60 * 60)
+    cutoff_timestamp = config.CURRENT_TIME - (5 * 24 * 60 * 60)
 
     where_params = cast(
         chromadb.api.types.Where,

@@ -3,17 +3,17 @@
 import asyncio
 from api import schemas
 
-_buffer: list[schemas.GameEvent] = []
+_buffer: list[schemas.GameEventModel] = []
 _lock = asyncio.Lock()
 
-async def append(event: schemas.GameEvent):
+async def append(event: schemas.GameEventModel):
     #called in routes_ws
     async with _lock:
         _buffer.append(event)
 
-async def flush() -> list[schemas.GameEvent]:
+async def flush() -> list[schemas.GameEventModel]:
     # flushed by orchestrator clock and sends buffer to miner
     async with _lock:
-        temp: list[schemas.GameEvent] = _buffer.copy()
+        temp: list[schemas.GameEventModel] = _buffer.copy()
         _buffer.clear()
         return temp

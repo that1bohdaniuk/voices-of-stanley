@@ -32,7 +32,7 @@ async def game_endpoint(websocket: WebSocket):
 
 
 async def send_action_to_game(action_payload: JSON):
-    # call in director
+    # function to be called in director
     if active_connection:
         await active_connection.send_json(action_payload)
     else:

@@ -10,3 +10,5 @@ TWRAG_DECAY_RATE: float = 0.1
 EVENT_PURGE_TIME: int = 60
 # threshold for importance value below which events become purge-prone
 EVENT_PURGE_IMPORTANCE_THRESHOLD: float = 3.5
+# current ingame time
+CURRENT_TIME: float
