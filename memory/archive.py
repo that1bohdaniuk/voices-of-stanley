@@ -89,7 +89,7 @@ async def twrag(_chroma_results: QueryResult, broadness: int):
 
 
 
-async def retrieve(_event: GameEventModel, filter_dict: dict = None):
+async def retrieve(_event: GameEventModel):
     # custom formula (look up miro whiteboard)
     global _collection
     # casting to custom Include type (Literal["embeddings", "documents"...]) so linter won't tell anything
@@ -100,8 +100,7 @@ async def retrieve(_event: GameEventModel, filter_dict: dict = None):
         _collection.query,
         query_texts=[_event.label],
         n_results=50,
-        include=include_params,
-        where=filter_dict)
+        include=include_params)
     return await twrag(_chroma_results=results, broadness=5)
 # usage example: retrieve(event, filter_dict={"event_type": "signal_detected"})
 
