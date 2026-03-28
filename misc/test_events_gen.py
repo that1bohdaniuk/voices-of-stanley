@@ -19,13 +19,13 @@ def generate_test_events(num: int) -> List[GameEventModel]:
 
     for _ in range(num):
         days_ago = random.uniform(0, 10)
-        simulated_time = datetime.now() - timedelta(days=days_ago)
+        simulated_time = time.time() - (60*60*24*days_ago)
 
         id = uuid.uuid4()
         label =f"{random.choice(event_types)}: {fake.sentence()}"
         timestamp = simulated_time
         location = random.choice(location_types)
-        importance = random.uniform(0, 10)
+        importance = random.uniform(0.1, 10)
         details={"inventory": fake.word(), "hungriness": random.uniform(1, 100)}
         events.append(GameEventModel(id=id, label=label, timestamp=timestamp, location=location, importance=importance, details=details))
     return events

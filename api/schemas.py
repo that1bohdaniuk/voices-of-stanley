@@ -3,7 +3,8 @@
 from datetime import datetime
 import uuid
 from pydantic import BaseModel, Field
-from typing import Any, Dict, Union, Optional
+from typing import Any, Dict, Union, Optional, List
+
 
 class GameEventModel(BaseModel):
     id: uuid.UUID = Field(
@@ -33,3 +34,11 @@ class GameEventModel(BaseModel):
         description="Extra contextual key-value pairs (e.g., {'entity_spotted': true, 'signal_strength': 85.5}). Values MUST be strings, integers, floats, or booleans only. No nested objects."
     )
 
+class EventExtractionModel(BaseModel):
+    extracted_events: List[GameEventModel] = Field(
+        description="A list of semantically chunked and filtered events extracted from the raw telemetry. Outputted by miner."
+    )
+
+# TODO: PROPER VALUE VALIDATION! MUST BE CLAMPED BETWEEN 0-300
+class ProfileJSONModel(BaseModel):
+    deltas: Dict[str, Any]

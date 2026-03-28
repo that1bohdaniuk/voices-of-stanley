@@ -1,21 +1,24 @@
 # contains system prompts and few-shot examples for miner qwen3.5:4B model
 # formats the raw buffer data into discrete event chunks and assigns the 1-10 importance score
-from ollama import chat
-from ollama import ChatResponse
+import asyncio
+import json
 
-response: ChatResponse = chat(model='qwen3.5:0.8B', messages=[
-  {
-    'role': 'user',
-    'content': 'Why is the sky blue?',
-  },
-])
-print(response['message']['content'])
-# or access fields directly from the response object
+from api.schemas import GameEventModel, EventExtractionModel
+from core import state_buffer
+from ollama import AsyncClient
 
-print("\n--- Metrics ---")
-print(f"Total Duration: {response['total_duration']} nanoseconds")
-print(f"Load Duration: {response['load_duration']} nanoseconds")
-print(f"Prompt Eval Count: {response['prompt_eval_count']} tokens")
-print(f"Prompt Eval Duration: {response['prompt_eval_duration']} nanoseconds")
-print(f"Eval Count: {response['eval_count']} tokens")
-print(f"Eval Duration: {response['eval_duration']} nanoseconds")
+client = AsyncClient()
+
+async def mine_buffer() -> EventExtractionModel:
+  # receives flushed buffer of raw data and outputs structured GameEvent chunks,
+  #  combining semantically similar events and neglecting noise
+  _events: list[GameEventModel] = await state_buffer.flush()
+  _data_string = json.dumps(_events, indent=2)
+
+  response  = await client.chat(
+    model="qwen3.5:0.8B",
+    messages=[{'role': 'user', 'content': ('Raw data: '+ _data_string)}],
+    format=EventExtractionModel.model_json_schema()
+  )
+
+  return EventExtractionModel.model_validate_json(response.message.content)

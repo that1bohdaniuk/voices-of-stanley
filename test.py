@@ -191,3 +191,32 @@ async def test_purge_boundary_conditions(mock_config):
 
     # Adjust these assertions based on whether your operators are strict (<) or inclusive (<=)
     assert "Boundary Importance" in remaining_docs
+
+@pytest.mark.asyncio
+async def test_delete_events_by_id():
+    """ensure specific events can be deleted by their IDs while leaving others intact."""
+    event_to_delete_1 = GameEventModel(
+        id=uuid.uuid4(), label="Target 1", timestamp=100.0, importance=1.0
+    )
+    event_to_delete_2 = GameEventModel(
+        id=uuid.uuid4(), label="Target 2", timestamp=200.0, importance=1.0
+    )
+    event_to_keep = GameEventModel(
+        id=uuid.uuid4(), label="Safe Event", timestamp=300.0, importance=5.0
+    )
+
+    await archive.embed_bunch([event_to_delete_1, event_to_delete_2, event_to_keep])
+
+    # verify all three were inserted
+    initial_results = archive._collection.get()
+    assert len(initial_results["ids"]) == 3
+
+    # delete the first two events by their IDs
+    ids_to_delete = [str(event_to_delete_1.id), str(event_to_delete_2.id)]
+    await archive.delete_events_by_id(ids_to_delete)
+
+    # only the third event should remain
+    remaining = archive._collection.get()
+    assert len(remaining["ids"]) == 1
+    assert remaining["ids"][0] == str(event_to_keep.id)
+    assert remaining["documents"][0] == "Safe Event"

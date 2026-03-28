@@ -9,13 +9,13 @@ from core import orchestrator
 from memory.archive import initialize_chroma_client
 from api.routes_ws import ws_router
 from api.routes_http import http_router
+from llm import pruner
 import config
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     #STARTUP
-    # TODO: connect to chromaDB instance
     print("[FastAPI] Starting lifespan.")
     print("[ChromaDB] Initializing client...")
     app.state.chroma_client = await initialize_chroma_client()
@@ -25,7 +25,6 @@ async def lifespan(app: FastAPI):
     yield
 
     #SHUTDOWN
-    # TODO: add chromaDB closing handling
     print("[FastAPI] Ending lifespan.")
     print("[CLOCK] Stopping orchestrator clock.")
     clock_task.cancel()

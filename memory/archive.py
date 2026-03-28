@@ -4,7 +4,9 @@ import asyncio
 import chromadb
 import numpy as np
 from typing import List, cast
-from chromadb import QueryResult
+from chromadb import QueryResult, GetResult
+from chromadb.api.types import OneOrMany
+
 import config
 from api.schemas import GameEventModel
 
@@ -16,7 +18,7 @@ async def initialize_chroma_client() -> chromadb.ClientAPI:
     _client = chromadb.PersistentClient(path="./data/")
     _collection = _client.get_or_create_collection(
         name="events-collection",
-        # explicitly define hsnw vector space as cosine
+        # explicitly define hnsw vector space as cosine
         metadata={"hnsw:space": "cosine"})
 
     return _client
@@ -157,7 +159,7 @@ async def purge_events():
 # function that returns all recent non-pruned events
 async def get_all_to_prune_events():
     global _collection
-    cutoff_timestamp = config.CURRENT_TIME - (5 * 24 * 60 * 60)
+    cutoff_timestamp = config.CURRENT_TIME - config.EVENT_PRUNE_TIME_THRESHOLD_SECONDS
 
     where_params = cast(
         chromadb.api.types.Where,
@@ -165,16 +167,23 @@ async def get_all_to_prune_events():
     )
     include_params = cast(
         chromadb.api.types.Include,
-        ["metadatas"]
+        ["metadatas", "documents"]
     )
 
-    result = await asyncio.to_thread(
+    result: GetResult = await asyncio.to_thread(
         _collection.get,
         where=where_params,
         include=include_params
     )
 
-    return result["ids"]
+    return result
 
+async def delete_events_by_id(ids: OneOrMany[chromadb.IDs]):
+    global _collection
+
+    await asyncio.to_thread(
+        _collection.delete,
+        ids=ids,
+    )
 
 
