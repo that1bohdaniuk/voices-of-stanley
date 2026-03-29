@@ -17,6 +17,8 @@ async def game_endpoint(websocket: WebSocket):
     print("Websocket triggered.")
     # db = websocket.app.state.vector_db
     global active_connection
+    active_connection = websocket
+
     await websocket.accept()
     try:
         while True:
@@ -31,7 +33,7 @@ async def game_endpoint(websocket: WebSocket):
         await websocket.close()
 
 
-async def send_action_to_game(action_payload: JSON):
+async def send_action_to_game(action_payload):
     # function to be called in director
     if active_connection:
         await active_connection.send_json(action_payload)

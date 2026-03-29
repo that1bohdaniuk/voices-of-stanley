@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 import chromadb
 from unittest.mock import patch
 import uuid

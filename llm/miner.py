@@ -13,7 +13,7 @@ async def mine_buffer() -> EventExtractionModel:
   # receives flushed buffer of raw data and outputs structured GameEvent chunks,
   #  combining semantically similar events and neglecting noise
   _events: list[GameEventModel] = await state_buffer.flush()
-  _data_string = json.dumps(_events, indent=2)
+  _data_string = json.dumps([event.model_dump(mode='json') for event in _events], indent=2)
 
   response  = await client.chat(
     model="qwen3.5:0.8B",
