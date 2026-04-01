@@ -7,16 +7,22 @@ from api.schemas import GameEventModel, EventExtractionModel
 from core import state_buffer
 from ollama import AsyncClient
 
+from llm.client import check_ollama_server
+
 client = AsyncClient()
 
 async def mine_buffer() -> EventExtractionModel:
   # receives flushed buffer of raw data and outputs structured GameEvent chunks,
   #  combining semantically similar events and neglecting noise
+  await check_ollama_server()
+
   _events: list[GameEventModel] = await state_buffer.flush()
+  if not _events:
+    raise ValueError("No events flushed from buffer when miner called.")
   _data_string = json.dumps([event.model_dump(mode='json') for event in _events], indent=2)
 
   response  = await client.chat(
-    model="qwen3.5:0.8B",
+    model="qwen3.5:0.8B", # temporary model
     messages=[{'role': 'user', 'content': ('Raw data: '+ _data_string)}],
     format=EventExtractionModel.model_json_schema()
   )

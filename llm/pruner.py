@@ -4,11 +4,14 @@ import logging
 
 from ollama import AsyncClient
 from api.schemas import ProfileJSONModel
+from llm.client import check_ollama_server
 from memory.archive import get_all_to_prune_events, delete_events_by_id
 
 client = AsyncClient()
 
 async def prune():
+    await check_ollama_server()
+
     try:
         _events = await get_all_to_prune_events()
         _events_string = json.dumps(_events)
@@ -21,7 +24,7 @@ async def prune():
 
 
     try:
-        with open("data/psychoprofile.json") as f:
+        with open("../data/psychoprofile.json") as f:
             _data = json.load(f)
         _data_string = json.dumps(_data)
     except FileNotFoundError:
@@ -33,7 +36,8 @@ async def prune():
         return
 
     _response = await client.generate(
-        model="pruner-9B",
+        #model="pruner-9B",
+        model="qwen3.5:0.8B",
         prompt=("Player's psychoprofile: " + _data_string + "\nEvents to assess:\n" + _events_string),
         format=ProfileJSONModel.model_json_schema()
     )
