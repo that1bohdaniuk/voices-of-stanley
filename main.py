@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
     print("[FastAPI] Starting lifespan...")
 
     print("[Ollama] Initializing Ollama client...")
-    await client.start_ollama_server()
+    await client.check_ollama_server()
 
     print("[ChromaDB] Initializing client...")
     app.state.chroma_client = await initialize_chroma_client()

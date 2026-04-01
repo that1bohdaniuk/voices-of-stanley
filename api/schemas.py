@@ -48,3 +48,19 @@ def is_clamped(value: int) ->int:
 
 class ProfileJSONModel(BaseModel):
     deltas: Dict[str, Any]
+
+# an event that would be sent to game from director,
+# contains an action and a payload (which can be used to trigger specific in-game mechanics,
+# spawn entities, or alter the game state in a way that aligns with the narrative direction)
+class DirectorEventModel(BaseModel):
+    id: uuid.UUID = Field(
+        default_factory=uuid.uuid4,
+        description="Unique identifier for the event. Automatically generated if not provided."
+
+    )
+    type: str = Field(
+        description="Type of event sent."
+    )
+    data: Dict[str, Any] = Field(
+        description="The payload. Depends on the type of the event."
+    )

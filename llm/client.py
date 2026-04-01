@@ -1,4 +1,5 @@
 # sets up async Ollama client
+import logging
 import subprocess
 import httpx
 import ollama
@@ -65,3 +66,19 @@ async def check_ollama_server():
                 _ollama_process = None
     # if we got here then restarting server
     return await start_ollama_server()
+
+
+# TODO: write an auto-unload wrapper that accepts model and llm_call_coro as parameters
+async def unload_ollama_model(model_name: str):
+    try:
+        async with httpx.AsyncClient() as hc:
+            response = await hc.post(
+                # see ollama api generate endpoint
+                # https://docs.ollama.com/api/generate#body-keep-alive-one-of-0
+                "http://localhost:11434/api/generate",
+                json={"model": model_name, "keep_alive": 0},
+                timeout=5
+            )
+            logging.info(f"[Ollama] Model unloaded succesfully.")
+    except Exception as e:
+        logging.warning(f"[Ollama] Failed to unload ollama model: {e}")

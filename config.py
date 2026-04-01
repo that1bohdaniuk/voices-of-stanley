@@ -17,3 +17,11 @@ CURRENT_TIME: float = time.time()
 LAST_PRUNE_TIME: float
 # threshold which governs after how many in-game days pruning proccess starts
 EVENT_PRUNE_TIME_THRESHOLD_SECONDS: float = 5*24*60*60
+# how many similar events archive.twrag() returns
+TWRAG_RETRIEVAL_BROADNESS:int = 5
+# model name for miner
+MINER_MODEL: str = 'miner-9B'
+# model name for pruner
+PRUNER_MODEL: str = 'pruner-9B'
+# model name for director
+DIRECTOR_MODEL: str = 'directory-9B'

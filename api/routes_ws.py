@@ -1,34 +1,55 @@
 # defines the fastapi websocket endpoint
 # catches incoming game deltas, passes them to the buffer, and maintains the active connection object to send payloads back to the C++ mod.
 import json
-from rich.json import JSON
+import logging
+
 from fastapi import APIRouter, WebSocketDisconnect, WebSocket
+from pydantic import ValidationError
 
 from api.schemas import GameEventModel
-from memory.archive import embed
+from core import state_buffer
 
 ws_router = APIRouter()
+logger = logging.getLogger(__name__)
 
 #global reference so other modules (like director) can push data back into game
-active_connection: WebSocket
+active_connection: WebSocket | None = None
 
 @ws_router.websocket("/ws")
 async def game_endpoint(websocket: WebSocket):
-    print("Websocket triggered.")
-    # db = websocket.app.state.vector_db
+    print("[WS] Connection attempt.")
     global active_connection
     active_connection = websocket
 
     await websocket.accept()
+    print("[WS] Connection accepted.")
     try:
         while True:
             raw_data = await websocket.receive_text()
-            data = json.loads(raw_data)
-            # printing raw_data for logging because it's more viewable
-            print(f"Websocket triggered. Received: {raw_data}")
+            try:
+                data = json.loads(raw_data)
+            except json.JSONDecodeError as e:
+                logger.error(f"[WS] Invalid JSON: {raw_data}")
+                continue
+
+            # validate incoming json against GameEventModel schema
+            try:
+                event = GameEventModel(**data)
+                await state_buffer.append(event)
+                logger.debug(f"[WS] Event received: {event.label} (importance={event.importance})")
+            except ValidationError as ve:
+                logger.error(f"[WS] Invalid event payload: {ve}")
+                continue
+            except Exception as e:
+                logger.error(f"[WS] Unexpected error processing this event: {e}")
+                continue
 
     except WebSocketDisconnect:
         print("VotV disconnected.")
+        active_connection = None
+        await websocket.close()
+    except Exception as e:
+        logger.error(f"[WS] Unexpected error: {e}")
         active_connection = None
         await websocket.close()
 
@@ -36,6 +57,10 @@ async def game_endpoint(websocket: WebSocket):
 async def send_action_to_game(action_payload):
     # function to be called in director
     if active_connection:
-        await active_connection.send_json(action_payload)
+        try:
+            await active_connection.send_json(action_payload)
+            logger.debug(f"[WS] Action sent to game endpoint: {action_payload}")
+        except Exception as e:
+            logger.error(f"[WS] Failed to send action: {e}")
     else:
-        print("Tried to send an action to VotV, but connection closed.")
+        logger.warning("Tried to send an action to VotV, but connection closed.")

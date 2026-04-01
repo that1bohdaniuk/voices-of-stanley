@@ -114,7 +114,7 @@ async def retrieve(_event: GameEventModel):
         query_texts=[_event.label],
         n_results=50,
         include=include_params)
-    return await twrag(_chroma_results=results, broadness=5)
+    return await twrag(_chroma_results=results, broadness=config.TWRAG_RETRIEVAL_BROADNESS)
 # usage example: retrieve(event, filter_dict={"event_type": "signal_detected"})
 
 
