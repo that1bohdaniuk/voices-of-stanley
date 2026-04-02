@@ -4,7 +4,7 @@ import time
 # interval that governs buffer flush into orchestrator clock
 CLOCK_INTERVAL: int = 5
 # tension threshold, і так понятно
-TENSION_THRESHOLD: int = 100
+TENSION_SUM_THRESHOLD: float = 100
 # dt | Decay rate for time-weighted RAG with importance score (look up miro)
 TWRAG_DECAY_RATE: float = 0.1
 # minutes after which events become obsolete
@@ -25,3 +25,7 @@ MINER_MODEL: str = 'miner-9B'
 PRUNER_MODEL: str = 'pruner-9B'
 # model name for director
 DIRECTOR_MODEL: str = 'directory-9B'
+# importance bound that signals to director to react immediately
+HIGH_IMPORTANCE_DIRECTOR_THRESHOLD: float = 8.0
+# amount of routine tasks player should do in a row for director to trigger
+IDLE_DIRECTOR_THRESHOLD: int = 10

@@ -1,5 +1,5 @@
 # contains system prompt for director qwen3.5 model
-# ingests memories and psychoprofile to generate a final json payload
+# ingests memories and psychoprofile to generate a final JSON payload
 import json
 
 from ollama import AsyncClient
@@ -29,7 +29,7 @@ async def _prepare_context(_trigger_event: GameEventModel) -> str:
 
 
 async def director(_trigger_event: GameEventModel):
-    # call the director model, feed it context from _prepare_context, and return the final json output
+    # call the director model, feed it context from _prepare_context, and return the final JSON output
     await check_ollama_server()
     _model = config.DIRECTOR_MODEL
 

@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
     app.state.chroma_client = await initialize_chroma_client()
 
     print("[CLOCK] Starting orchestrator clock...")
-    clock_task =  asyncio.create_task(orchestrator.run_clock(interval=config.CLOCK_INTERVAL))
+    clock_task =  asyncio.create_task(orchestrator.loop(interval=config.CLOCK_INTERVAL))
 
     yield
 
