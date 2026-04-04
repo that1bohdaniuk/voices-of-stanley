@@ -23,7 +23,7 @@ def _normalize_delete_ids(raw_ids) -> list[str]:
     return []
 
 
-async def prune():
+async def run_pruner():
     await check_ollama_server()
     _model = config.PRUNER_MODEL
     try:

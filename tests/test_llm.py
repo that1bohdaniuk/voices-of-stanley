@@ -37,7 +37,7 @@ async def test_mine_buffer(mock_chat):
     mock_chat.return_value = MockResponse()
 
     # run the miner
-    result = await miner.mine_buffer()
+    result = await miner.run_miner()
 
     assert len(result.extracted_events) == 1
     assert result.extracted_events[0].label == "Processed movement chunk"
@@ -72,7 +72,7 @@ async def test_pruner(mock_file, mock_check_ollama, mock_generate, mock_get_even
     mock_generate.return_value = {'response': json.dumps(mock_llm_response)}
 
     # pruner
-    await pruner.prune()
+    await pruner.run_pruner()
 
     mock_file().write.assert_called()
 
@@ -127,7 +127,7 @@ async def test_director(mock_unload, mock_send_action, mock_generate, mock_retri
         }
         mock_generate.return_value = {'response': json.dumps(mock_llm_response)}
 
-        await director.director(trigger_event)
+        await director.run_director(trigger_event)
 
         mock_check_ollama.assert_called_once()
         mock_retrieve.assert_called_once_with(trigger_event)
@@ -170,7 +170,7 @@ async def test_director_handles_validation_error(mock_unload, mock_send_action, 
         mock_generate.return_value = {'response': json.dumps(invalid_response)}
 
         with pytest.raises(ValidationError):
-            await director.director(trigger_event)
+            await director.run_director(trigger_event)
 
         mock_unload.assert_called_once_with('director-9B'
                                             )

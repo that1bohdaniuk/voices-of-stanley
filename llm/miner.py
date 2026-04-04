@@ -11,7 +11,7 @@ from llm.client import check_ollama_server, unload_ollama_model
 
 client = AsyncClient()
 
-async def mine_buffer() -> EventExtractionModel:
+async def run_miner() -> EventExtractionModel:
   # receives flushed buffer of raw data and outputs structured GameEvent chunks,
   #  combining semantically similar events and neglecting noise
   await check_ollama_server()

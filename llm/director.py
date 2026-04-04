@@ -28,7 +28,7 @@ async def _prepare_context(_trigger_event: GameEventModel) -> str:
     return prompt_string
 
 
-async def director(_trigger_event: GameEventModel):
+async def run_director(_trigger_event: GameEventModel):
     # call the director model, feed it context from _prepare_context, and return the final JSON output
     await check_ollama_server()
     _model = config.DIRECTOR_MODEL

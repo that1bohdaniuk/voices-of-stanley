@@ -25,7 +25,7 @@ async def start_ollama_server(retries=30, delay=1):
                     await healthcheck.get("http://localhost:11434/api/version", timeout=2)
                     print("[Ollama] Server started succesfully.")
                     return True
-            except httpx.ConnectError:
+            except httpx.HTTPError:
                 if attempt < retries - 1:
                     await asyncio.sleep(delay)
         # if we exhaust retries, terminate the process and raise error
@@ -60,7 +60,7 @@ async def check_ollama_server():
                 async with httpx.AsyncClient() as healthcheck:
                     await healthcheck.get("http://localhost:11434/api/version", timeout=2)
                     return True
-            except httpx.ConnectError:
+            except httpx.HTTPError:
                 print("[Ollama] Process running but server not responding.")
                 _ollama_process.terminate()
                 _ollama_process = None

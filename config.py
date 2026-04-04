@@ -11,8 +11,6 @@ TWRAG_DECAY_RATE: float = 0.1
 EVENT_PURGE_TIME: int = 7*75
 # threshold for importance value below which events become purge-prone
 EVENT_PURGE_IMPORTANCE_THRESHOLD: float = 3.5
-# current ingame time
-CURRENT_TIME: float = time.time()
 # unix timestamp that indicates when the last pruning was done
 LAST_PRUNE_TIME: float
 # threshold which governs after how many in-game days pruning proccess starts
