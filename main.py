@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from core import orchestrator
+from core import orchestrator_service
 from memory.archive import initialize_chroma_client
 from api.routes_ws import ws_router
 from api.routes_http import http_router
@@ -25,15 +25,17 @@ async def lifespan(app: FastAPI):
     app.state.chroma_client = await initialize_chroma_client()
 
     print("[CLOCK] Starting orchestrator clock...")
-    clock_task =  asyncio.create_task(orchestrator.loop(interval=config.CLOCK_INTERVAL))
-
-    yield
+    app.state.orchestrator = orchestrator_service.OrchestratorService()
+    await app.state.orchestrator.start()
+    try:
+        yield
+    finally:
+        await app.state.orchestrator.stop()
 
     #SHUTDOWN
     print("[FastAPI] Ending lifespan...")
 
     print("[CLOCK] Stopping orchestrator clock...")
-    clock_task.cancel()
 
     print("[Ollama] Stopping Ollama client...")
     await client.stop_ollama_server()
