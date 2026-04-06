@@ -1,17 +1,19 @@
 # test_llm_modules.py
 # these tests are not using ollama service, they just test the hardcoded stuff happening
-import pytest
 import json
 from unittest.mock import patch, AsyncMock, mock_open
 
-from llm import miner, pruner
+import pytest
+
 from api.schemas import GameEventModel
 from core import state_buffer
+from llm import miner, pruner
 
 
 @pytest.mark.asyncio
 @patch("llm.miner.client.chat", new_callable=AsyncMock)
-async def test_mine_buffer(mock_chat):
+@patch("llm.miner.embed_bunch", new_callable=AsyncMock)
+async def test_mine_buffer(mock_embed_bunch, mock_chat):
     """test that the miner correctly pulls from the buffer and parses LLM output."""
 
     raw_event = GameEventModel(label="Raw movement data", timestamp=100.0)
@@ -41,6 +43,7 @@ async def test_mine_buffer(mock_chat):
 
     assert len(result.extracted_events) == 1
     assert result.extracted_events[0].label == "Processed movement chunk"
+    mock_embed_bunch.assert_awaited_once()
 
     remaining_buffer = await state_buffer.flush()
     assert len(remaining_buffer) == 0
@@ -100,7 +103,6 @@ async def test_pruner(mock_file, mock_check_ollama, mock_generate, mock_get_even
 async def test_director(mock_unload, mock_send_action, mock_generate, mock_retrieve, mock_check_ollama, mock_file):
     """test that director retrieves context, calls LLM, validates response, and sends to game."""
     from llm import director
-    from api.schemas import DirectorEventModel
 
     # Mock config to use a test model name
     with patch("llm.director.config") as mock_config:

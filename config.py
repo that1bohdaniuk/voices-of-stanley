@@ -24,6 +24,6 @@ PRUNER_MODEL: str = 'pruner-9B'
 # model name for director
 DIRECTOR_MODEL: str = 'directory-9B'
 # importance bound that signals to director to react immediately
-HIGH_IMPORTANCE_DIRECTOR_THRESHOLD: float = 8.0
+FORCE_DIRECTOR_THRESHOLD: float = 8.0
 # amount of routine tasks player should do in a row for director to trigger
 IDLE_DIRECTOR_THRESHOLD: int = 10

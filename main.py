@@ -5,13 +5,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from core import orchestrator_service
+import core.orchestrator_service
 from memory.archive import initialize_chroma_client
-from api.routes_ws import ws_router
-from api.routes_http import http_router
+import api.routes_ws as routes_ws
+import api.routes_http as routes_http
 from llm import client
-import config
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,8 +22,8 @@ async def lifespan(app: FastAPI):
     print("[ChromaDB] Initializing client...")
     app.state.chroma_client = await initialize_chroma_client()
 
-    print("[CLOCK] Starting orchestrator clock...")
-    app.state.orchestrator = orchestrator_service.OrchestratorService()
+    print("[Orchestration] Initializing orchestrator service...]")
+    app.state.orchestrator = core.orchestrator_service.OrchestratorService()
     await app.state.orchestrator.start()
     try:
         yield
@@ -35,12 +33,14 @@ async def lifespan(app: FastAPI):
     #SHUTDOWN
     print("[FastAPI] Ending lifespan...")
 
-    print("[CLOCK] Stopping orchestrator clock...")
+    print("[Orchestration] Stopping orchestrator service...")
+    await app.state.orchestrator.stop()
+    app.state.orchestrator = None
 
     print("[Ollama] Stopping Ollama client...")
     await client.stop_ollama_server()
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(ws_router)
-app.include_router(http_router)
+app.include_router(routes_ws.ws_router)
+app.include_router(routes_http.http_router)
