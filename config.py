@@ -20,9 +20,9 @@ TWRAG_RETRIEVAL_BROADNESS:int = 5
 # model name for miner
 MINER_MODEL: str = 'miner-9B'
 # model name for pruner
-PRUNER_MODEL: str = 'pruner-9B'
+PRUNER_MODEL: str = 'pruner-4B'
 # model name for director
-DIRECTOR_MODEL: str = 'directory-9B'
+DIRECTOR_MODEL: str = 'director-9B'
 # importance bound that signals to director to react immediately
 FORCE_DIRECTOR_THRESHOLD: float = 8.0
 # amount of routine tasks player should do in a row for director to trigger
